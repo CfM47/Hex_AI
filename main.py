@@ -2,6 +2,7 @@ import os
 
 from HumanPlayer import HumanPlayer
 from board import HexBoard
+from player import AiPlayer
 from utils import get_input, get_int_input
 
 
@@ -16,15 +17,15 @@ def main():
     clear()
     print("Welcome to the game of Hex!")
     input("Press enter to continue...")
-    clear()
-    type1 = get_input("Enter the type of player 1: ", {"h": "Human", "c": "Computer"})
-    clear()
-    type2 = get_input("Enter the type of player 2: ", {"h": "Human", "c": "Computer"})
+    # clear()
+    # type1 = get_input("Enter the type of player 1: ", {"h": "Human", "c": "Computer"})
+    # clear()
+    # type2 = get_input("Enter the type of player 2: ", {"h": "Human", "c": "Computer"})
     clear()
     size = get_int_input("Enter the size of the board: ", 2, 20)
     p1 = HumanPlayer(1)
-    p2 = HumanPlayer(1)
-    players = [None, p1, p2]
+    p2 = AiPlayer(1)
+    players = [None, p2, p1]
     board = HexBoard(size)
     turn = True
     while board.winner == 0:

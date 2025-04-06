@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 class HexBoard:
   def __init__(self, size: int):
     self.size = size  # Tamaño N del tablero (NxN)
@@ -12,8 +14,9 @@ class HexBoard:
   def clone(self) -> "HexBoard":
     """Devuelve una copia del tablero actual"""
     new_board = HexBoard(self.size)
-    new_board.board = self.board.copy()
-    new_board.pathMask = self.pathMask.copy()
+    new_board.board = deepcopy(self.board)
+    new_board.pathMask = deepcopy(self.pathMask)
+    new_board.winner = self.winner
     return new_board
 
   def place_piece(self, row: int, col: int, player_id: int) -> bool:
