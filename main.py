@@ -24,8 +24,8 @@ def main():
     clear()
     size = get_int_input("Enter the size of the board: ", 2, 20)
     p1 = HumanPlayer(1)
-    p2 = AiPlayer(1)
-    players = [None, p2, p1]
+    p2 = HumanPlayer(2)
+    players = [None, p1, p2]
     board = HexBoard(size)
     turn = True
     while board.winner == 0:
