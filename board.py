@@ -1,4 +1,4 @@
-from dsu import DisjointSet
+from utils import DisjointSet, get_neighbors
 from copy import deepcopy
 
 class HexBoard:
@@ -38,7 +38,7 @@ class HexBoard:
     self.board[row][col] = player_id
 
     # updating dsu with winning info
-    neighbors = self.get_neighbors(row, col)
+    neighbors = get_neighbors(self.size, row, col)
     for r, c in neighbors:
       if self.board[r][c] == self.board[row][col]:
         self.dsu[player_id].union((row, col), (r, c))
@@ -49,38 +49,6 @@ class HexBoard:
 
     return True
 
-
-  def get_neighbors(self, row: int, col: int) -> list[tuple[int, int]]:
-    if row % 2 == 0:
-      # Para filas pares (i par):
-      # (i, j - 1) → Izquierda
-      # (i, j + 1) → Derecha
-      # (i - 1, j) → Arriba
-      # (i + 1, j) → Abajo
-      # (i - 1, j + 1) → Arriba-Derecha
-      # (i + 1, j + 1) → Abajo-Derecha
-      dr = [0, 0, -1, 1, -1, 1]
-      dc = [-1, 1, 0, 0, 1, 1]
-    else:
-      # Para filas impares (i impar):
-      # (i, j - 1) → Izquierda
-      # (i, j + 1) → Derecha
-      # (i - 1, j) → Arriba
-      # (i + 1, j) → Abajo
-      # (i - 1, j - 1) → Arriba-Izquierda
-      # (i + 1, j - 1) → Abajo-Izquierda
-      dr = [0, 0, -1, 1, -1, 1]
-      dc = [-1, 1, 0, 0, -1, -1]
-
-    result: list[tuple[int, int]] = []
-    for i in range(6):
-      ri = row + dr[i]
-      ci = col + dc[i]
-      r_ok = 0 <= ri < self.size
-      c_ok = 0 <= ci < self.size
-      if r_ok and c_ok:
-        result.append((ri, ci))
-    return result
   def get_possible_moves(self) -> list:
     """Devuelve todas las casillas vacías como tuplas (fila, columna)."""
     result = []
