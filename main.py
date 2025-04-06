@@ -3,7 +3,7 @@ import os
 from HumanPlayer import HumanPlayer
 from RandomPlayer import RandomPlayer
 from board import HexBoard
-from player import AiPlayer
+from player import AiPlayer, max_island_size_heuristic
 from utils import get_input, get_int_input
 
 
@@ -26,7 +26,7 @@ def game() -> int:
     #size = get_int_input("Enter the size of the board: ", 2, 20)
     size = 11
     p1 = RandomPlayer(1)
-    p2 = AiPlayer(2)
+    p2 = AiPlayer(2, max_island_size_heuristic)
     players = [None, p1, p2]
     board = HexBoard(size)
     turn = True

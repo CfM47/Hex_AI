@@ -7,10 +7,11 @@ from board import HexBoard
 
 
 class AiPlayer(Player):
-  def __init__(self, player_id: int):
+  def __init__(self, player_id: int, heuristic: Callable[[HexBoard, int], float]):
     super().__init__(player_id)
+    self.heuristic = heuristic
   def play(self, board: HexBoard) -> tuple:
-    min_max = MinMax(2, max_island_size_heuristic)
+    min_max = MinMax(2, self.heuristic)
     return min_max.alpha_beta_search(board, self.player_id)
 
 class MinMax:
