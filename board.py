@@ -64,7 +64,7 @@ class HexBoard:
 
   @staticmethod
   def get_char_color(color: int):
-    return [" ", "■", "O"][color]
+    return ["⬜", "🟥", "🟦"][color]
 
   def print_board(self):
     offset = 0
@@ -74,5 +74,5 @@ class HexBoard:
       print(whitespaces, end='')
       for j in range(self.size):
         color_char = self.get_char_color(self.board[i][j])
-        print(f"({color_char})", end='')
+        print(f"{color_char}", end='')
       print()

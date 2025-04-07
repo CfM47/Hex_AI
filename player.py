@@ -7,20 +7,26 @@ from board import HexBoard
 
 
 class AiPlayer(Player):
-  def __init__(self, player_id: int, heuristic: Callable[[HexBoard, int], float]):
+  def __init__(self, player_id: int,
+               heuristics: list[Callable[[HexBoard, int], float]], weights: list[float]
+               ):
     super().__init__(player_id)
-    self.heuristic = heuristic
+    self.heuristics = heuristics
+    self.weights = weights
+    # self.heuristics = [max_island_size_heuristic, big_island_size_heuristic, strong_connections_heuristic]
+    # self.weights = [0.6, 0.2, 0.2]
   def play(self, board: HexBoard) -> tuple:
-    min_max = MinMax(2, self.heuristic)
+    min_max = MinMax(2, self.heuristics, self.weights)
     return min_max.alpha_beta_search(board, self.player_id)
 
 class MinMax:
   """
   min max with ab-prune
   """
-  def __init__(self, max_depth, heuristic: Callable[[HexBoard, int], float]):
+  def __init__(self, max_depth, heuristics: list[Callable[[HexBoard, int], float]], weights: list[float]):
     self.max_depth = max_depth
-    self.heuristic = heuristic
+    self.heuristic = heuristics
+    self.weights = weights
     self.depth = 0
 
   @staticmethod
@@ -28,14 +34,10 @@ class MinMax:
     return board.check_connection(1) or board.check_connection(2)
 
   def utility(self, board: HexBoard, player_id: int) -> float:
-    return self.heuristic(board, player_id)
-    # opponent = get_opponent_id(player_id)
-    # if board.check_connection(opponent):
-    #   return 0
-    # elif board.check_connection(player_id):
-    #   return 1
-    # else:
-    #   return 0.5
+    value = 0
+    for i in range(len(self.heuristic)):
+      value += self.weights[i] * self.heuristic[i](board, player_id)
+    return value
 
   def alpha_beta_search(self, board: HexBoard, player_id: int) -> tuple:
     value, move = self.max_value(board, player_id, -float('inf'), float('inf'))
@@ -97,13 +99,12 @@ class MinMax:
 def max_island_size_heuristic(state: HexBoard, player_id: int) -> float:
   cells = [(i,j) for i in range(state.size) for j in range(state.size)]
   dsu = [None, DisjointSet(cells), DisjointSet(cells)]
-  for row in range(state.size):
-    for col in range(state.size):
-      neighbors = get_neighbors(state.size, row, col)
-      color = state.board[row][col]
-      for r, c in neighbors:
-        if color != 0 and state.board[r][c] == color:
-          dsu[color].union((row, col), (r, c))
+  for row, col in cells:
+    neighbors = get_neighbors(state.size, row, col)
+    color = state.board[row][col]
+    for r, c in neighbors:
+      if color != 0 and state.board[r][c] == color:
+        dsu[color].union((row, col), (r, c))
 
   maximum_size = [.0, -float('inf'), float('inf')]
   for cell in cells:
@@ -115,11 +116,54 @@ def max_island_size_heuristic(state: HexBoard, player_id: int) -> float:
   opponent = get_opponent_id(player_id)
   return (maximum_size[player_id] - maximum_size[opponent]) / state.size
 
+def big_island_size_heuristic(state: HexBoard, player_id: int) -> float:
+  cells = [(i,j) for i in range(state.size) for j in range(state.size)]
+  dsu = [None, DisjointSet(cells), DisjointSet(cells)]
+  for row, col in cells:
+    neighbors = get_neighbors(state.size, row, col)
+    color = state.board[row][col]
+    for r, c in neighbors:
+      if color != 0 and state.board[r][c] == color:
+        dsu[color].union((row, col), (r, c))
+
+  maximum_size = [.0, -float('inf'), float('inf')]
+  for cell in cells:
+    row, col = cell
+    color = state.board[row][col]
+    if color != 0 and dsu[color].size[cell] > 1:
+      maximum_size[color] += dsu[color].size[cell]
+
+  opponent = get_opponent_id(player_id)
+  return (maximum_size[player_id] - maximum_size[opponent]) / state.size
+
+def bridges_heuristic(state: HexBoard, player_id: int) -> float:
+  # a heuristic that values moves that connect previously unconnected tokens
+  cells = [(i, j) for i in range(state.size) for j in range(state.size)]
+
+  # strong connections count
+  bridges_count = [0, 0, 0]
+  for row, col in cells:
+    neighbors = get_neighbors(state.size, row, col, get_all=True)
+    for i in range(len(neighbors)):
+      r, c = neighbors[i]
+      if not is_pos_ok(state.size,(r,c)):
+        continue
+      color = state.board[r][c]
+      for di in [2, 3]:
+        r2, c2 = neighbors[(i+di) % len(neighbors)]
+        if is_pos_ok(state.size,(r2,c2)) and state.board[r2][c2] == color:
+          bridges_count[color] += 1
+
+  opponent = get_opponent_id(player_id)
+  return bridges_count[player_id] - bridges_count[opponent]
+
+
+
+
 # utils-----------------------------------
 
 def get_opponent_id(player_id: int) -> int:
   return (player_id % 2) + 1
-
 
 def pick_random(seq: list):
   item = choice(seq)
@@ -166,35 +210,35 @@ class DisjointSet:
       return self.parent[x]
     return x
 
-
-def get_neighbors(size: int, row: int, col: int) -> list[tuple[int, int]]:
+def get_neighbors(size: int, row: int, col: int, get_all: bool = False) -> list[tuple[int, int]]:
   if row % 2 == 0:
     # Para filas pares (i par):
-    # (i, j - 1) → Izquierda
-    # (i, j + 1) → Derecha
     # (i - 1, j) → Arriba
-    # (i + 1, j) → Abajo
     # (i - 1, j + 1) → Arriba-Derecha
+    # (i, j + 1) → Derecha
     # (i + 1, j + 1) → Abajo-Derecha
-    dr = [0, 0, -1, 1, -1, 1]
-    dc = [-1, 1, 0, 0, 1, 1]
+    # (i + 1, j) → Abajo
+    # (i, j - 1) → Izquierda
+    dr = [-1, -1, 0, 1, 1, 0]
+    dc = [0, 1, 1, 1, 0, -1]
   else:
     # Para filas impares (i impar):
-    # (i, j - 1) → Izquierda
-    # (i, j + 1) → Derecha
     # (i - 1, j) → Arriba
+    # (i, j + 1) → Derecha
     # (i + 1, j) → Abajo
-    # (i - 1, j - 1) → Arriba-Izquierda
     # (i + 1, j - 1) → Abajo-Izquierda
-    dr = [0, 0, -1, 1, -1, 1]
-    dc = [-1, 1, 0, 0, -1, -1]
+    # (i, j - 1) → Izquierda
+    # (i - 1, j - 1) → Arriba-Izquierda
+    dr = [-1, 0, 1, 1, 0, -1]
+    dc = [0, 1, 0, -1, -1, -1]
 
   result: list[tuple[int, int]] = []
   for i in range(6):
-    ri = row + dr[i]
-    ci = col + dc[i]
-    r_ok = 0 <= ri < size
-    c_ok = 0 <= ci < size
-    if r_ok and c_ok:
-      result.append((ri, ci))
+    move = (row + dr[i], col + dc[i])
+    if is_pos_ok(size, move) or get_all:
+      result.append(move)
   return result
+
+def is_pos_ok(size: int, pos: tuple[int, int]) -> bool:
+  (x, y) = pos
+  return 0 <= x < size and 0 <= y < size
