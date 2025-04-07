@@ -3,7 +3,8 @@ import os
 from HumanPlayer import HumanPlayer
 from RandomPlayer import RandomPlayer
 from board import HexBoard
-from player import AiPlayer, big_island_size_heuristic, max_island_size_heuristic, bridges_heuristic
+from player import AiPlayer, big_island_size_heuristic, max_island_size_heuristic, bridges_heuristic, \
+    moves_needed_heuristic
 from utils import get_input, get_int_input
 from time import time_ns
 
@@ -12,7 +13,7 @@ def clear() -> None:
     os.system('cls' if os.name == 'nt' else 'clear')
 
 
-def game() -> (int, list[int]):
+def game(print_board=False) -> (int, list[int]):
     """
   Main function to initialize a game of Hex.
   """
@@ -29,26 +30,31 @@ def game() -> (int, list[int]):
     p1 = RandomPlayer(1)
     p2 = AiPlayer(
         2,
-        [max_island_size_heuristic, big_island_size_heuristic, bridges_heuristic],
-        [0, 0, 1])
+        [moves_needed_heuristic, bridges_heuristic()],
+        [1, 1])
     players = [None, p1, p2]
     board = HexBoard(size)
     turn = True
 
     turn_count = 1
     response_time = [0, 0, 0]
-    while board.winner == 0:
+    winner = 0
+    while winner == 0:
 
-      clear()
-      board.print_board()
-      print()
+      if print_board:
+        input()
+        clear()
+        board.print_board()
+        print()
 
       p = 1 if turn else 2
       start_time = time_ns() / 1e9
       piece = players[p].play(board)
       end_time = time_ns() / 1e9
       response_time[p] = end_time - start_time
-      print(f"Response time: {response_time[p]}")
+
+      if print_board:
+        print(f"Response time: {response_time[p]}")
 
       while not piece:
         print("invalid movement")
@@ -57,14 +63,19 @@ def game() -> (int, list[int]):
       board.place_piece(row, col, p)
       turn = not turn
       turn_count += 1
+
+      if board.check_connection(1):
+          winner = 1
+      if board.check_connection(2):
+          winner = 2
+
+    if print_board:
+      clear()
+      board.print_board()
+      print(f"The winner is {winner}")
       input()
 
-    clear()
-    board.print_board()
-    print(f"The winner is {board.winner}")
-    input()
-
-    return board.winner, response_time
+    return winner, response_time
 
 
 def main():

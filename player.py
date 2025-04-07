@@ -1,4 +1,5 @@
 from builtins import float
+from collections import deque
 from random import choice
 from typing import Callable
 
@@ -25,7 +26,7 @@ class MinMax:
   """
   def __init__(self, max_depth, heuristics: list[Callable[[HexBoard, int], float]], weights: list[float]):
     self.max_depth = max_depth
-    self.heuristic = heuristics
+    self.heuristics = heuristics
     self.weights = weights
     self.depth = 0
 
@@ -35,8 +36,8 @@ class MinMax:
 
   def utility(self, board: HexBoard, player_id: int) -> float:
     value = 0
-    for i in range(len(self.heuristic)):
-      value += self.weights[i] * self.heuristic[i](board, player_id)
+    for i in range(len(self.heuristics)):
+      value += self.weights[i] * self.heuristics[i](board, player_id)
     return value
 
   def alpha_beta_search(self, board: HexBoard, player_id: int) -> tuple:
@@ -50,6 +51,10 @@ class MinMax:
     value = -float('inf')
     move = None
     possible_moves = board.get_possible_moves()
+    if len(possible_moves) <= 20:
+      self.max_depth = 3
+    else:
+      self.max_depth = 2
     while len(possible_moves) > 0:
       move = pick_random(possible_moves)
       row, col = move
@@ -76,6 +81,10 @@ class MinMax:
     value = float('inf')
     move = None
     possible_moves = board.get_possible_moves()
+    if len(possible_moves) <= 20:
+      self.max_depth = 3
+    else:
+      self.max_depth = 2
     while len(possible_moves) > 0:
       move = pick_random(possible_moves)
       row, col = move
@@ -157,8 +166,11 @@ def bridges_heuristic(state: HexBoard, player_id: int) -> float:
   opponent = get_opponent_id(player_id)
   return bridges_count[player_id] - bridges_count[opponent]
 
-
-
+def moves_needed_heuristic(state: HexBoard, player_id: int) -> float:
+  opponent = get_opponent_id(player_id)
+  min_moves_player = bfs(state, player_id)
+  min_moves_opponent = bfs(state, opponent)
+  return min_moves_opponent - min_moves_player
 
 # utils-----------------------------------
 
@@ -209,6 +221,59 @@ class DisjointSet:
       self.parent[x] = self.find_set(self.parent[x])
       return self.parent[x]
     return x
+
+def get_end(size, player_id)-> tuple[int, int]:
+  down = (size, 0)
+  right = (0, size)
+  return [None, right, down][player_id]
+
+def bfs(state: HexBoard, player_id: int) -> int:
+  opponent = get_opponent_id(player_id)
+  q = deque()
+  w = [1, 0, 0]
+  w[opponent] = float('inf')
+  w[player_id] = 0
+  d = {}
+  visited = set()
+
+  for i in range(state.size):
+    row, col = (i, 0)
+    if player_id == 2:
+      row, col = col, row
+
+    color = state.board[row][col]
+    if color == opponent:
+      continue
+    d[(row, col)] = w[color]
+    if color == player_id: q.appendleft((row, col))
+    else: q.append((row, col))
+
+  while len(q) > 0:
+    row, col = q.popleft()
+    if (row, col) in visited:
+      continue
+    visited.add((row, col))
+
+    neighbors = get_neighbors(state.size, row, col)
+    for r, c in neighbors:
+      color = state.board[r][c]
+      if color == opponent:
+        continue
+
+      new_d = d[(row, col)] + w[color]
+      d[(r, c)] = min(d[(r,c)], new_d) if (r, c) in d else new_d
+
+      if color == player_id: q.appendleft((r, c))
+      else: q.append((r, c))
+
+  result = float('inf')
+  for i in range(state.size):
+    row, col = (i, state.size - 1)
+    if player_id == 2:
+      row, col = col, row
+    if (row, col) in d:
+      result = min(result, d[(row, col)])
+  return result
 
 def get_neighbors(size: int, row: int, col: int, get_all: bool = False) -> list[tuple[int, int]]:
   if row % 2 == 0:
