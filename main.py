@@ -13,16 +13,13 @@ def clear() -> None:
     os.system('cls' if os.name == 'nt' else 'clear')
 
 
-def game(print_board=False) -> (int, list[int]):
+def game(print_board=False, logs=False) -> (int, list[int]):
     """
   Main function to initialize a game of Hex.
   """
     size = 11
     p1 = RandomPlayer(1)
-    p2 = AiPlayer(
-        2,
-        [moves_needed_heuristic, bridges_heuristic],
-        [1, 1])
+    p2 = RandomPlayer(2)
     players = [None, p1, p2]
     board = HexBoard(size)
     turn = True
@@ -69,14 +66,18 @@ def game(print_board=False) -> (int, list[int]):
       print(f"The winner is {winner}")
       print(moves)
       input()
+
+    if logs and not print_board:
+      board.print_board()
+      print(moves)
     return winner, response_time
 
 
 def main():
   count = [0, 0, 0]
-  total = 20
+  total = 200
   for i in range(total):
-    winner, response_time = game(True)
+    winner, response_time = game(False, True)
     print(f"Winner match {i}: {winner}")
     print(f"Average response time: {response_time[1] / total}")
     print(f"Average response time: {response_time[2] / total}")
