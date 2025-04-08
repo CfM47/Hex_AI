@@ -219,8 +219,7 @@ class DisjointSet:
   def find_set(self, x):
     if x != self.parent[x]:
       self.parent[x] = self.find_set(self.parent[x])
-      return self.parent[x]
-    return x
+    return self.parent[x]
 
 def get_end(size, player_id)-> tuple[int, int]:
   down = (size, 0)

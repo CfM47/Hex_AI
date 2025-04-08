@@ -1,10 +1,10 @@
-from utils import DisjointSet, get_neighbors
+from utils import DisjointSet, get_neighbors, is_pos_ok
 from copy import deepcopy
 
 class HexBoard:
   def __init__(self, size: int):
     self.size = size  # Tamaño N del tablero (NxN)
-    self.board = [[0 for _ in range(size)] for _ in range(size)]  # Matriz NxN (0=vacío, 1=Jugador1, 2=Jugador2)
+    self.board = [[0] * size for _ in range(size)]  # Matriz NxN (0=vacío, 1=Jugador1, 2=Jugador2)
     self.winner = 0
     # initialize dsu for checking the winner
     cells = [(i,j) for i in range(size) for j in range(size)]
@@ -23,13 +23,12 @@ class HexBoard:
 
   def clone(self) -> "HexBoard":
     """Devuelve una copia del tablero actual"""
-    new_board = HexBoard(self.size)
-    new_board.board = deepcopy(self.board)
+    new_board = deepcopy(self)
     return new_board
 
   def place_piece(self, row: int, col: int, player_id: int) -> bool:
     """Coloca una ficha si la casilla está vacía."""
-    if row < 0 or row >= self.size or col < 0 or col >= self.size:
+    if not is_pos_ok(self.size, (row, col)):
       raise IndexError('row of column index out of the board')
     if player_id not in [1, 2]:
       raise IndexError('whose player id is this XD')
@@ -67,10 +66,8 @@ class HexBoard:
     return ["⬜", "🟥", "🟦"][color]
 
   def print_board(self):
-    offset = 0
     for i in range(self.size):
-      offset = i
-      whitespaces = " " * offset
+      whitespaces = " " * i
       print(whitespaces, end='')
       for j in range(self.size):
         color_char = self.get_char_color(self.board[i][j])
