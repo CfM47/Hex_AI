@@ -276,30 +276,18 @@ def bfs(state: HexBoard, player_id: int) -> int:
   return result
 
 def get_neighbors(size: int, row: int, col: int, get_all: bool = False) -> list[tuple[int, int]]:
-  if row % 2 == 0:
-    # Para filas pares (i par):
-    # (i - 1, j) → Arriba
-    # (i - 1, j + 1) → Arriba-Derecha
-    # (i, j + 1) → Derecha
-    # (i + 1, j + 1) → Abajo-Derecha
-    # (i + 1, j) → Abajo
-    # (i, j - 1) → Izquierda
-    dr = [-1, -1, 0, 1, 1, 0]
-    dc = [0, 1, 1, 1, 0, -1]
-  else:
-    # Para filas impares (i impar):
-    # (i - 1, j) → Arriba
-    # (i, j + 1) → Derecha
-    # (i + 1, j) → Abajo
-    # (i + 1, j - 1) → Abajo-Izquierda
-    # (i, j - 1) → Izquierda
-    # (i - 1, j - 1) → Arriba-Izquierda
-    dr = [-1, 0, 1, 1, 0, -1]
-    dc = [0, 1, 0, -1, -1, -1]
+  d = [
+    (-1, 0),  # Arriba
+    (-1, 1),  # Arriba derecha
+    (0, 1),  # Derecha
+    (1, 0),  # Abajo
+    (1, -1),  # Abajo izquierda
+    (0, -1)  # Izquierda
+  ]
 
   result: list[tuple[int, int]] = []
   for i in range(6):
-    move = (row + dr[i], col + dc[i])
+    move = (row + d[i][0], col + d[i][1])
     if is_pos_ok(size, move) or get_all:
       result.append(move)
   return result

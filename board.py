@@ -69,7 +69,7 @@ class HexBoard:
   def print_board(self):
     offset = 0
     for i in range(self.size):
-      offset = (offset + 1) % 2
+      offset = i
       whitespaces = " " * offset
       print(whitespaces, end='')
       for j in range(self.size):

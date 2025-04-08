@@ -68,34 +68,23 @@ class DisjointSet:
     return x
 
 
-def get_neighbors(size: int, row: int, col: int) -> list[tuple[int, int]]:
-  if row % 2 == 0:
-    # Para filas pares (i par):
-    # (i, j - 1) → Izquierda
-    # (i, j + 1) → Derecha
-    # (i - 1, j) → Arriba
-    # (i + 1, j) → Abajo
-    # (i - 1, j + 1) → Arriba-Derecha
-    # (i + 1, j + 1) → Abajo-Derecha
-    dr = [0, 0, -1, 1, -1, 1]
-    dc = [-1, 1, 0, 0, 1, 1]
-  else:
-    # Para filas impares (i impar):
-    # (i, j - 1) → Izquierda
-    # (i, j + 1) → Derecha
-    # (i - 1, j) → Arriba
-    # (i + 1, j) → Abajo
-    # (i - 1, j - 1) → Arriba-Izquierda
-    # (i + 1, j - 1) → Abajo-Izquierda
-    dr = [0, 0, -1, 1, -1, 1]
-    dc = [-1, 1, 0, 0, -1, -1]
+def get_neighbors(size: int, row: int, col: int, get_all: bool = False) -> list[tuple[int, int]]:
+  d = [
+    (-1, 0),  # Arriba
+    (-1, 1),  # Arriba derecha
+    (0, 1),  # Derecha
+    (1, 0),  # Abajo
+    (1, -1),  # Abajo izquierda
+    (0, -1)  # Izquierda
+  ]
 
   result: list[tuple[int, int]] = []
   for i in range(6):
-    ri = row + dr[i]
-    ci = col + dc[i]
-    r_ok = 0 <= ri < size
-    c_ok = 0 <= ci < size
-    if r_ok and c_ok:
-      result.append((ri, ci))
+    move = (row + d[i][0], col + d[i][1])
+    if is_pos_ok(size, move) or get_all:
+      result.append(move)
   return result
+
+def is_pos_ok(size: int, pos: tuple[int, int]) -> bool:
+  (x, y) = pos
+  return 0 <= x < size and 0 <= y < size
