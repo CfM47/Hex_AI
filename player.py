@@ -1,52 +1,49 @@
 from builtins import float
 from collections import deque
 from random import choice
-from typing import Callable
-
 from base_player import Player
 from board import HexBoard
 
 
 class AiPlayer(Player):
-  def __init__(self, player_id: int,
-               heuristics: list[Callable[[HexBoard, int], float]], weights: list[float]
-               ):
+  def __init__(self, player_id: int,):
     super().__init__(player_id)
-    self.heuristics = heuristics
-    self.weights = weights
-    # self.heuristics = [max_island_size_heuristic, big_island_size_heuristic, strong_connections_heuristic]
-    # self.weights = [0.6, 0.2, 0.2]
   def play(self, board: HexBoard) -> tuple:
-    min_max = MinMax(2, self.heuristics, self.weights)
+    min_max = MinMax()
     return min_max.alpha_beta_search(board, self.player_id)
 
 class MinMax:
   """
   min max with ab-prune
   """
-  def __init__(self, max_depth, heuristics: list[Callable[[HexBoard, int], float]], weights: list[float]):
-    self.max_depth = max_depth
-    self.heuristics = heuristics
-    self.weights = weights
+  def __init__(self):
+    # BONIATO --label to quickly search adjustment lines for my agent
+    self.max_depth = 1
     self.depth = 0
 
   @staticmethod
-  def is_terminal(board: HexBoard) -> int:
+  def is_terminal(board: HexBoard) -> bool:
     return board.check_connection(1) or board.check_connection(2)
 
-  def utility(self, board: HexBoard, player_id: int) -> float:
+  @staticmethod
+  def utility(board: HexBoard, player_id: int) -> float:
+    # BONIATO --label to quickly search adjustment lines for my agent
+    heuristics = [moves_needed_heuristic, bridges_heuristic]
+    weights = [1, 1]
     value = 0
-    for i in range(len(self.heuristics)):
-      value += self.weights[i] * self.heuristics[i](board, player_id)
+    for i in range(len(heuristics)):
+      value += weights[i] * heuristics[i](board, player_id)
     return value
 
   def alpha_beta_search(self, board: HexBoard, player_id: int) -> tuple:
+    if self.max_depth == 0:
+      return choice(board.get_possible_moves())
     value, move = self.max_value(board, player_id, -float('inf'), float('inf'))
     return move
 
   def max_value(self, board: HexBoard, player_id: int, alpha: float, beta: float) -> (int, tuple):
     if MinMax.is_terminal(board) or self.depth >= self.max_depth:
-      return self.utility(board, player_id), None
+      return self.utility(board, get_opponent_id(player_id)), None
 
     value = -float('inf')
     move = None
@@ -56,8 +53,7 @@ class MinMax:
     else:
       self.max_depth = 2
     while len(possible_moves) > 0:
-      move = pick_random(possible_moves)
-      row, col = move
+      row, col = pick_random(possible_moves)
 
       board2 = board.clone()
       board2.place_piece(row, col, player_id)
@@ -71,12 +67,12 @@ class MinMax:
         value, move = value2, (row, col)
         alpha = max(alpha, value)
       if value >= beta:
-        return value, move
+        break
     return value, move
 
   def min_value(self, board: HexBoard, player_id: int, alpha: float, beta: float) -> (int, tuple):
     if MinMax.is_terminal(board) or self.depth >= self.max_depth:
-      return self.utility(board, player_id), None
+      return self.utility(board, get_opponent_id(player_id)), None
 
     value = float('inf')
     move = None
@@ -86,8 +82,7 @@ class MinMax:
     else:
       self.max_depth = 2
     while len(possible_moves) > 0:
-      move = pick_random(possible_moves)
-      row, col = move
+      row, col = pick_random(possible_moves)
 
       board2 = board.clone()
       board2.place_piece(row, col, player_id)
@@ -101,21 +96,14 @@ class MinMax:
         value, move = value2, (row, col)
         beta = min(beta, value)
       if value <= beta:
-        return value, move
+        break
     return value, move
 
 # heuristics
 def max_island_size_heuristic(state: HexBoard, player_id: int) -> float:
-  cells = [(i,j) for i in range(state.size) for j in range(state.size)]
-  dsu = [None, DisjointSet(cells), DisjointSet(cells)]
-  for row, col in cells:
-    neighbors = get_neighbors(state.size, row, col)
-    color = state.board[row][col]
-    for r, c in neighbors:
-      if color != 0 and state.board[r][c] == color:
-        dsu[color].union((row, col), (r, c))
-
-  maximum_size = [.0, -float('inf'), float('inf')]
+  dsu = get_islands_info(state)
+  maximum_size = [.0, -float('inf'), -float('inf')]
+  cells = [(i, j) for i in range(state.size) for j in range(state.size)]
   for cell in cells:
     row, col = cell
     color = state.board[row][col]
@@ -126,24 +114,17 @@ def max_island_size_heuristic(state: HexBoard, player_id: int) -> float:
   return (maximum_size[player_id] - maximum_size[opponent]) / state.size
 
 def big_island_size_heuristic(state: HexBoard, player_id: int) -> float:
-  cells = [(i,j) for i in range(state.size) for j in range(state.size)]
-  dsu = [None, DisjointSet(cells), DisjointSet(cells)]
-  for row, col in cells:
-    neighbors = get_neighbors(state.size, row, col)
-    color = state.board[row][col]
-    for r, c in neighbors:
-      if color != 0 and state.board[r][c] == color:
-        dsu[color].union((row, col), (r, c))
-
-  maximum_size = [.0, -float('inf'), float('inf')]
+  dsu = get_islands_info(state)
+  total_size = [0, 0, 0]
+  cells = [(i, j) for i in range(state.size) for j in range(state.size)]
   for cell in cells:
     row, col = cell
     color = state.board[row][col]
     if color != 0 and dsu[color].size[cell] > 1:
-      maximum_size[color] += dsu[color].size[cell]
+      total_size[color] += dsu[color].size[cell]
 
   opponent = get_opponent_id(player_id)
-  return (maximum_size[player_id] - maximum_size[opponent]) / state.size
+  return (total_size[player_id] - total_size[opponent]) / state.size
 
 def bridges_heuristic(state: HexBoard, player_id: int) -> float:
   # a heuristic that values moves that connect previously unconnected tokens
@@ -202,6 +183,8 @@ class DisjointSet:
   def union(self, x, y):
     root_x = self.find_set(x)
     root_y = self.find_set(y)
+    if root_x == root_y:
+      return
     self.link(root_x, root_y)
 
   def link(self, x, y):
@@ -220,6 +203,18 @@ class DisjointSet:
     if x != self.parent[x]:
       self.parent[x] = self.find_set(self.parent[x])
     return self.parent[x]
+
+def get_islands_info(state: HexBoard) -> list:
+  cells = [(i, j) for i in range(state.size) for j in range(state.size)]
+  dsu = [None, DisjointSet(cells), DisjointSet(cells)]
+  for row, col in cells:
+    neighbors = get_neighbors(state.size, row, col)
+    color = state.board[row][col]
+    for r, c in neighbors:
+      if color != 0 and state.board[r][c] == color:
+        dsu[color].union((row, col), (r, c))
+
+  return dsu
 
 def get_end(size, player_id)-> tuple[int, int]:
   down = (size, 0)
@@ -294,3 +289,12 @@ def get_neighbors(size: int, row: int, col: int, get_all: bool = False) -> list[
 def is_pos_ok(size: int, pos: tuple[int, int]) -> bool:
   (x, y) = pos
   return 0 <= x < size and 0 <= y < size
+
+def pretty_print(matrix):
+  for i in range(len(matrix)):
+    whitespaces = " " * i
+    print(whitespaces, end='')
+    for j in range(len(matrix)):
+      print(f"{round(matrix[i][j], 2)} |", end='')
+    print()
+  input()

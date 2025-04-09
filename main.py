@@ -19,7 +19,7 @@ def game(print_board=False, logs=False) -> (int, list[int]):
   """
     size = 11
     p1 = RandomPlayer(1)
-    p2 = RandomPlayer(2)
+    p2 = AiPlayer(2)
     players = [None, p1, p2]
     board = HexBoard(size)
     turn = True
@@ -72,18 +72,65 @@ def game(print_board=False, logs=False) -> (int, list[int]):
       print(moves)
     return winner, response_time
 
+# [(10, 10), (4, 1), (7, 2), (4, 4), (10, 1), (8, 5), (3, 1), (0, 7), (2, 9), (5, 10), (0, 10), (2, 10), (2, 0), (10, 7), (9, 4), (3, 5), (4, 6), (5, 9), (8, 8), (7, 0), (4, 8), (8, 10), (8, 3), (4, 10), (2, 3), (0, 6), (6, 5), (1, 1), (7, 4)]
+
+def fixed_game(moves: list[tuple], print_board=False, logs=False) -> (int, list[int]):
+    size = 11
+    board = HexBoard(size)
+    turn = True
+
+    turn_count = 1
+
+    winner = 0
+    for move in moves:
+        if print_board:
+            input()
+            clear()
+            board.print_board()
+            print()
+
+        p = 1 if turn else 2
+        row, col = move
+        board.place_piece(row, col, p)
+        turn = not turn
+        turn_count += 1
+
+        if board.check_connection(1):
+            winner = 1
+        if board.check_connection(2):
+            winner = 2
+
+    if print_board:
+        clear()
+        board.print_board()
+        if winner != 0:
+            print(f"The winner is {winner}")
+        print(moves)
+        input()
+
+    if logs and not print_board:
+        board.print_board()
+        print(moves)
+    return winner
 
 def main():
-  count = [0, 0, 0]
-  total = 200
-  for i in range(total):
-    winner, response_time = game(False, True)
-    print(f"Winner match {i}: {winner}")
-    print(f"Average response time: {response_time[1] / total}")
-    print(f"Average response time: {response_time[2] / total}")
-    count[winner] +=1
-  print(f"Player 1 wins: {count[1]/total}")
-  print(f"Player 2 wins: {count[2]/total}")
+  # count = [0, 0, 0]
+  # total = 20
+  # for i in range(total):
+  #   winner, response_time = game(True, True)
+  #   print(f"Winner match {i}: {winner}")
+  #   print(f"Average response time: {response_time[1] / total}")
+  #   print(f"Average response time: {response_time[2] / total}")
+  #   count[winner] +=1
+  # print(f"Player 1 wins: {count[1]/total}")
+  # print(f"Player 2 wins: {count[2]/total}")
+
+  moves = [(10, 10), (4, 1), (7, 2), (4, 4), (10, 1), (8, 5),
+           (3, 1), (0, 7), (2, 9), (5, 10), (0, 10), (2, 10),
+           (2, 0), (10, 7), (9, 4), (3, 5), (4, 6), (5, 9),
+           (8, 8), (7, 0), (4, 8), (8, 10), (8, 3), (4, 10),
+           (2, 3), (0, 6), (6, 5), (1, 1), (7, 4)]
+  fixed_game(moves, print_board=True, logs=True)
 
 if __name__ == "__main__":
     main()

@@ -47,6 +47,8 @@ class DisjointSet:
   def union(self, x, y):
     root_x = self.find_set(x)
     root_y = self.find_set(y)
+    if root_x == root_y:
+      return
     self.link(root_x, root_y)
 
   def link(self, x, y):
