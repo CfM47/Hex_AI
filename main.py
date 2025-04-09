@@ -3,8 +3,7 @@ import os
 from HumanPlayer import HumanPlayer
 from RandomPlayer import RandomPlayer
 from board import HexBoard
-from player import AiPlayer, big_island_size_heuristic, max_island_size_heuristic, bridges_heuristic, \
-    moves_needed_heuristic
+from player import AiPlayer
 from utils import get_input, get_int_input
 from time import time_ns
 
@@ -18,8 +17,9 @@ def game(print_board=False, logs=False) -> (int, list[int]):
   Main function to initialize a game of Hex.
   """
     size = 11
-    p1 = RandomPlayer(1)
-    p2 = AiPlayer(2)
+
+    p1 = AiPlayer(1)
+    p2 = RandomPlayer(2)
     players = [None, p1, p2]
     board = HexBoard(size)
     turn = True
@@ -32,7 +32,7 @@ def game(print_board=False, logs=False) -> (int, list[int]):
     while winner == 0:
 
       if print_board:
-        input()
+        # input()
         clear()
         board.print_board()
         print()
@@ -50,6 +50,7 @@ def game(print_board=False, logs=False) -> (int, list[int]):
         print("invalid movement")
         piece = players[p].play(board)
       row, col = piece
+      #print('piece: ', piece)
       board.place_piece(row, col, p)
       moves.append(piece)
       turn = not turn
@@ -114,23 +115,20 @@ def fixed_game(moves: list[tuple], print_board=False, logs=False) -> (int, list[
     return winner
 
 def main():
-  # count = [0, 0, 0]
-  # total = 20
-  # for i in range(total):
-  #   winner, response_time = game(True, True)
-  #   print(f"Winner match {i}: {winner}")
-  #   print(f"Average response time: {response_time[1] / total}")
-  #   print(f"Average response time: {response_time[2] / total}")
-  #   count[winner] +=1
-  # print(f"Player 1 wins: {count[1]/total}")
-  # print(f"Player 2 wins: {count[2]/total}")
+  count = [0, 0, 0]
+  total = 20
+  for i in range(total):
+    winner, response_time = game(True, True)
+    print(f"Winner match {i}: {winner}")
+    print(f"Average response time: {response_time[1] / total}")
+    print(f"Average response time: {response_time[2] / total}")
+    count[winner] +=1
+  print(f"Player 1 wins: {count[1]/total}")
+  print(f"Player 2 wins: {count[2]/total}")
 
-  moves = [(10, 10), (4, 1), (7, 2), (4, 4), (10, 1), (8, 5),
-           (3, 1), (0, 7), (2, 9), (5, 10), (0, 10), (2, 10),
-           (2, 0), (10, 7), (9, 4), (3, 5), (4, 6), (5, 9),
-           (8, 8), (7, 0), (4, 8), (8, 10), (8, 3), (4, 10),
-           (2, 3), (0, 6), (6, 5), (1, 1), (7, 4)]
-  fixed_game(moves, print_board=True, logs=True)
+  # moves = [(7, 5), (5, 2), (8, 8), (3, 0), (1, 4), (10, 10), (4, 5), (9, 8), (4, 9), (9, 3), (1, 1), (6, 6), (9, 1), (5, 10), (6, 1), (2, 6), (1, 7), (0, 9), (9, 9), (1, 0), (3, 1), (6, 7), (4, 3), (0, 5), (2, 9), (0, 4), (9, 5), (9, 0), (7, 3), (5, 3), (4, 7), (3, 8), (6, 10), (4, 0), (9, 7), (4, 4), (9, 6)]
+  #
+  # fixed_game(moves, print_board=True, logs=True)
 
 if __name__ == "__main__":
     main()

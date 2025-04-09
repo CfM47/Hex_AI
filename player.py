@@ -18,7 +18,7 @@ class MinMax:
   """
   def __init__(self):
     # BONIATO --label to quickly search adjustment lines for my agent
-    self.max_depth = 1
+    self.max_depth = 2
     self.depth = 0
 
   @staticmethod
@@ -28,6 +28,24 @@ class MinMax:
   @staticmethod
   def utility(board: HexBoard, player_id: int) -> float:
     # BONIATO --label to quickly search adjustment lines for my agent
+    total_size = board.size ** 2
+    if board.check_connection(player_id):
+      return total_size**2 + 100
+    if board.check_connection(2):
+      return -total_size**2 - 100
+    moves_left = len(board.get_possible_moves())
+    # if moves_left >= board.size * 0.80:
+    #   heuristics = [big_island_size_heuristic, bridges_heuristic]
+    #   weights = [0.2, 0.8]
+    # if moves_left >= board.size * 0.50:
+    #   heuristics = [max_island_size_heuristic, bridges_heuristic, moves_needed_heuristic]
+    #   weights = [0.2, 0.4, 0.4]
+    # else:
+    #   heuristics = [big_island_size_heuristic, bridges_heuristic, moves_needed_heuristic]
+    #   weights = [0.2, 0.3, 0.5]
+    # if moves_left <= board.size * 0.15:
+    #   heuristics = [max_island_size_heuristic, moves_needed_heuristic]
+    #   weights = [0.3, 0.7]
     heuristics = [moves_needed_heuristic, bridges_heuristic]
     weights = [1, 1]
     value = 0
