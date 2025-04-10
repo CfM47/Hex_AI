@@ -80,13 +80,13 @@ class MinMax:
     while len(possible_moves) > 0:
       row, col = pick_random(possible_moves)
 
-      board2 = board.clone()
-      board2.place_piece(row, col, player_id)
       opponent = get_opponent_id(player_id)
 
+      board.board[row][col] = player_id
       self.depth += 1
-      value2, action2 = self.min_value(board2, opponent, alpha, beta)
+      value2, action2 = self.min_value(board, opponent, alpha, beta)
       self.depth -= 1
+      board.board[row][col] = 0
 
       if value2 > value:
         value, move = value2, (row, col)
@@ -105,13 +105,13 @@ class MinMax:
     while len(possible_moves) > 0:
       row, col = pick_random(possible_moves)
 
-      board2 = board.clone()
-      board2.place_piece(row, col, player_id)
       opponent = get_opponent_id(player_id)
 
+      board.board[row][col] = player_id
       self.depth += 1
-      value2, action2 = self.max_value(board2, opponent, alpha, beta)
+      value2, action2 = self.max_value(board, opponent, alpha, beta)
       self.depth -= 1
+      board.board[row][col] = 0
 
       if value2 < value:
         value, move = value2, (row, col)

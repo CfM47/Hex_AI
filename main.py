@@ -38,8 +38,9 @@ def game(print_board=False, logs=False) -> (int, list[int]):
         print()
 
       p = 1 if turn else 2
+      copy = board.clone()
       start_time = time_ns() / 1e9
-      piece = players[p].play(board)
+      piece = players[p].play(copy)
       end_time = time_ns() / 1e9
       response_time[p] = end_time - start_time
 
@@ -48,7 +49,7 @@ def game(print_board=False, logs=False) -> (int, list[int]):
 
       while not piece:
         print("invalid movement")
-        piece = players[p].play(board)
+        piece = players[p].play(copy)
       row, col = piece
       #print('piece: ', piece)
       board.place_piece(row, col, p)
@@ -72,8 +73,6 @@ def game(print_board=False, logs=False) -> (int, list[int]):
       board.print_board()
       print(moves)
     return winner, response_time
-
-# [(10, 10), (4, 1), (7, 2), (4, 4), (10, 1), (8, 5), (3, 1), (0, 7), (2, 9), (5, 10), (0, 10), (2, 10), (2, 0), (10, 7), (9, 4), (3, 5), (4, 6), (5, 9), (8, 8), (7, 0), (4, 8), (8, 10), (8, 3), (4, 10), (2, 3), (0, 6), (6, 5), (1, 1), (7, 4)]
 
 def fixed_game(moves: list[tuple], print_board=False, logs=False) -> (int, list[int]):
     size = 11
