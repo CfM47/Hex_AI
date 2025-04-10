@@ -1,10 +1,9 @@
-from utils import DisjointSet, get_neighbors, is_pos_ok
+from player import HexBoard, DisjointSet, get_neighbors, is_pos_ok
 from copy import deepcopy
 
-class HexBoard:
+class Board(HexBoard):
   def __init__(self, size: int):
-    self.size = size  # Tamaño N del tablero (NxN)
-    self.board = [[0] * size for _ in range(size)]  # Matriz NxN (0=vacío, 1=Jugador1, 2=Jugador2)
+    super().__init__(size)
     self.winner = 0
     # initialize dsu for checking the winner
     cells = [(i,j) for i in range(size) for j in range(size)]
@@ -21,7 +20,7 @@ class HexBoard:
       self.dsu[2].union((0, i), self.top)
       self.dsu[2].union((size-1, i), self.down)
 
-  def clone(self) -> "HexBoard":
+  def clone(self) -> "Board":
     """Devuelve una copia del tablero actual"""
     new_board = deepcopy(self)
     return new_board

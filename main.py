@@ -2,7 +2,7 @@ import os
 
 from HumanPlayer import HumanPlayer
 from RandomPlayer import RandomPlayer
-from board import HexBoard
+from board import Board
 from player import AiPlayer
 from utils import get_input, get_int_input
 from time import time_ns
@@ -21,7 +21,7 @@ def game(print_board=False, logs=False) -> (int, list[int]):
     p1 = AiPlayer(1)
     p2 = RandomPlayer(2)
     players = [None, p1, p2]
-    board = HexBoard(size)
+    board = Board(size)
     turn = True
 
     turn_count = 1
@@ -76,7 +76,7 @@ def game(print_board=False, logs=False) -> (int, list[int]):
 
 def fixed_game(moves: list[tuple], print_board=False, logs=False) -> (int, list[int]):
     size = 11
-    board = HexBoard(size)
+    board = Board(size)
     turn = True
 
     turn_count = 1
@@ -117,7 +117,7 @@ def main():
   count = [0, 0, 0]
   total = 20
   for i in range(total):
-    winner, response_time = game(True, True)
+    winner, response_time = game(False, False)
     print(f"Winner match {i}: {winner}")
     print(f"Average response time: {response_time[1] / total}")
     print(f"Average response time: {response_time[2] / total}")
