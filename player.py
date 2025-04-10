@@ -56,21 +56,8 @@ class MinMax:
       return total_size**2 + 100
     if board.check_connection(2):
       return -total_size**2 - 100
-    # moves_left = len(board.get_possible_moves())
-    # if moves_left >= board.size * 0.80:
-    #   heuristics = [big_island_size_heuristic, bridges_heuristic]
-    #   weights = [0.2, 0.8]
-    # if moves_left >= board.size * 0.50:
-    #   heuristics = [max_island_size_heuristic, bridges_heuristic, moves_needed_heuristic]
-    #   weights = [0.2, 0.4, 0.4]
-    # else:
-    #   heuristics = [big_island_size_heuristic, bridges_heuristic, moves_needed_heuristic]
-    #   weights = [0.2, 0.3, 0.5]
-    # if moves_left <= board.size * 0.15:
-    #   heuristics = [max_island_size_heuristic, moves_needed_heuristic]
-    #   weights = [0.3, 0.7]
     heuristics = [moves_needed_heuristic, bridges_heuristic]
-    weights = [1, 0.5]
+    weights = [0.8, 0.2]
     value = 0
     for i in range(len(heuristics)):
       value += weights[i] * heuristics[i](board, player_id)
@@ -80,8 +67,6 @@ class MinMax:
     possible_moves = board.get_possible_moves()
     if self.max_depth == 0:
       return choice(possible_moves)
-    # if len(possible_moves) <= 20:
-    #   self.max_depth = 3
     value, move = self.max_value(board, player_id, -float('inf'), float('inf'))
     return move
 
@@ -171,17 +156,16 @@ def bridges_heuristic(state: HexBoard, player_id: int) -> float:
   # strong connections count
   bridges_count = [0, 0, 0]
   for row, col in cells:
-    neighbors = get_neighbors(state.size, row, col, get_all=True)
-    for i in range(len(neighbors)):
-      r, c = neighbors[i]
-      if not is_pos_ok(state.size,(r,c)):
-        continue
-      color = state.board[r][c]
-      for di in [2, 3]:
-        r2, c2 = neighbors[(i+di) % len(neighbors)]
-        if is_pos_ok(state.size,(r2,c2)) and state.board[r2][c2] == color:
-          bridges_count[color] += 1
-
+    bridges = get_bridges(state.size, row, col)
+    color = state.board[row][col]
+    for bridge, paths in bridges:
+      r, c = bridge
+      if color == state.board[r][c]:
+        path_count = 0
+        for r2, c2 in paths:
+          if state.board[r2][c2] == 0:
+            path_count += 1
+        bridges_count[color] += 0.5 * path_count
   opponent = get_opponent_id(player_id)
   return bridges_count[player_id] - bridges_count[opponent]
 
@@ -190,7 +174,6 @@ def moves_needed_heuristic(state: HexBoard, player_id: int) -> float:
   min_moves_player = bfs(state, player_id)
   min_moves_opponent = bfs(state, opponent)
   return min_moves_opponent - 1.5 * min_moves_player
-
 # utils-----------------------------------
 
 def get_opponent_id(player_id: int) -> int:
@@ -323,6 +306,35 @@ def get_neighbors(size: int, row: int, col: int, get_all: bool = False) -> list[
     move = (row + d[i][0], col + d[i][1])
     if is_pos_ok(size, move) or get_all:
       result.append(move)
+  return result
+
+def get_bridges(size: int, row: int, col: int, get_all: bool = False) -> list[tuple[tuple[int, int], list[tuple[int, int]]]]:
+  bridges = [
+    (-2, 1),
+    (-1, 2),
+    (1, 1),
+    (2, -1),
+    (1, -2),
+    (-1, -1)
+  ]
+  possible_paths = [
+    [(-1, 0), (-1, 1)],
+    [(-1, 1), (0, 1)],
+    [(0, 1), (1, 0)],
+    [(1, 0), (1, -1)],
+    [(1, -1), (0, -1)],
+    [(0, -1), (-1, 0)],
+  ]
+  result: list[tuple[tuple[int, int], list[tuple[int, int]]]] = []
+  for i in range(6):
+    move = (row + bridges[i][0], col + bridges[i][1])
+    if is_pos_ok(size, move) or get_all:
+      paths = []
+      for r, c in possible_paths[i]:
+        pos = (row + r, col + c)
+        if is_pos_ok(size, pos):
+          paths.append(pos)
+      result.append((move, paths))
   return result
 
 def is_pos_ok(size: int, pos: tuple[int, int]) -> bool:

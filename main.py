@@ -117,7 +117,7 @@ def main():
   count = [0, 0, 0]
   total = 20
   for i in range(total):
-    winner, response_time = game(False, False)
+    winner, response_time = game(True, True)
     print(f"Winner match {i}: {winner}")
     print(f"Average response time: {response_time[1] / total}")
     print(f"Average response time: {response_time[2] / total}")
