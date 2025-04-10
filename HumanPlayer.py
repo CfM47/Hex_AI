@@ -1,4 +1,4 @@
-from base_player import Player
+from player import Player
 from utils import get_int_input
 class HumanPlayer(Player):
   def __init__(self, color):

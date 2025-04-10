@@ -1,9 +1,15 @@
 from builtins import float
 from collections import deque
 from random import choice
-from base_player import Player
 from board import HexBoard
 
+
+class Player:
+  def __init__(self, player_id: int):
+    self.player_id = player_id  # Tu identificador (1 o 2)
+
+  def play(self, board: HexBoard) -> tuple:
+    raise NotImplementedError("¡Implementa este método!")
 
 class AiPlayer(Player):
   def __init__(self, player_id: int,):
@@ -18,7 +24,7 @@ class MinMax:
   """
   def __init__(self):
     # BONIATO --label to quickly search adjustment lines for my agent
-    self.max_depth = 2
+    self.max_depth = 1 # for some reason depth 1 works the best XD
     self.depth = 0
 
   @staticmethod
@@ -33,7 +39,7 @@ class MinMax:
       return total_size**2 + 100
     if board.check_connection(2):
       return -total_size**2 - 100
-    moves_left = len(board.get_possible_moves())
+    # moves_left = len(board.get_possible_moves())
     # if moves_left >= board.size * 0.80:
     #   heuristics = [big_island_size_heuristic, bridges_heuristic]
     #   weights = [0.2, 0.8]
@@ -47,15 +53,18 @@ class MinMax:
     #   heuristics = [max_island_size_heuristic, moves_needed_heuristic]
     #   weights = [0.3, 0.7]
     heuristics = [moves_needed_heuristic, bridges_heuristic]
-    weights = [1, 1]
+    weights = [1, 0.5]
     value = 0
     for i in range(len(heuristics)):
       value += weights[i] * heuristics[i](board, player_id)
     return value
 
   def alpha_beta_search(self, board: HexBoard, player_id: int) -> tuple:
+    possible_moves = board.get_possible_moves()
     if self.max_depth == 0:
-      return choice(board.get_possible_moves())
+      return choice(possible_moves)
+    # if len(possible_moves) <= 20:
+    #   self.max_depth = 3
     value, move = self.max_value(board, player_id, -float('inf'), float('inf'))
     return move
 
@@ -68,8 +77,6 @@ class MinMax:
     possible_moves = board.get_possible_moves()
     if len(possible_moves) <= 20:
       self.max_depth = 3
-    else:
-      self.max_depth = 2
     while len(possible_moves) > 0:
       row, col = pick_random(possible_moves)
 
@@ -95,10 +102,6 @@ class MinMax:
     value = float('inf')
     move = None
     possible_moves = board.get_possible_moves()
-    if len(possible_moves) <= 20:
-      self.max_depth = 3
-    else:
-      self.max_depth = 2
     while len(possible_moves) > 0:
       row, col = pick_random(possible_moves)
 
@@ -169,7 +172,7 @@ def moves_needed_heuristic(state: HexBoard, player_id: int) -> float:
   opponent = get_opponent_id(player_id)
   min_moves_player = bfs(state, player_id)
   min_moves_opponent = bfs(state, opponent)
-  return min_moves_opponent - min_moves_player
+  return min_moves_opponent - 1.5 * min_moves_player
 
 # utils-----------------------------------
 
@@ -178,6 +181,7 @@ def get_opponent_id(player_id: int) -> int:
 
 def pick_random(seq: list):
   item = choice(seq)
+  #item = seq[0]
   seq.remove(item)
   return item
 
