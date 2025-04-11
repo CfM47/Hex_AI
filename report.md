@@ -1,4 +1,4 @@
-# Estrategia y otros detalles del agente
+no# Estrategia y otros detalles del agente
 
 La idea fundamental del funcionamiento del agente es calcular la mejor jugada posible para su turno en el juego, dado el estado del tablero.
 
@@ -19,6 +19,4 @@ Teniendo esas cuatro funciones para evaluar un estado, se halló una funcion de 
 
 Luego de un largo proceso de prueba y error las dos primeras heurísticas llegaron a tener un peso tan bajo que fueron descartadas para ahorrar computo, y se decidió darle un poco más de peso a `moves_needed_heuristic`, ya que de esa forma, el jugador se mantiene a la ofensiva sin sacrificar la estrategia, de lo contrario intenta llenar el tablero de puentes dejando de un lado la victoria xD.
 
-Finalmente, una parámetro que fue clave en la velocidad y eficacia del agente. Es efectuar el `Minimax` a profundidad $1$ (pudiera uno preguntarse si este cambio revoca su condición de `Minimax` y lo convierte en simplemente un `Max`, pero este .md no es el de un proyecto de filosofía). Esto hace que el jugador se comporte muy agresivo y menos planificador, lo cual vence a otros jugadores que usan una profundidad más alta. Para tener una idea de como esto ultimo cambia el desempeño del agente, de 50 partidas simuladas, entre el versiones del jugador que usaban profundidad 1 y 2 respectivamente, el jugador cuya profundidad 1 ganó el 100% de las veces. 
-
-En conclusión para un desempeño y tiempo de respuesta lo mejor posible, resultó ser más conveniente un enfoque más simple y sencillo. Como dijo Edger Dijkstra *"La simplicidad es una virtud en la programación. Cuanto más sencillo y claro sea el código, mejor será su funcionamiento."*
+Finalmente, una parámetro que fue clave en la velocidad y eficacia del agente. Es efectuar el `Minimax` a profundidad $1$ (pudiera uno preguntarse si este cambio revoca su condición de `Minimax` y lo convierte en simplemente un `Max`, pero este .md no es el de un proyecto de filosofía). Esto hace que el jugador se comporte muy agresivo y menos planificador, lo cual vence a otros jugadores que usan una profundidad más alta. Para tener una idea de como esto ultimo cambia el desempeño del agente, de 50 partidas simuladas, entre el versiones del jugador que usaban profundidad 1 y 2 respectivamente, el jugador cuya profundidad 1 ganó el 100% de las veces.
